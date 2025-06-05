@@ -11,6 +11,10 @@ in shared-packages ++ [
     additionalLibs = [ xorg.libX11 xorg.libXcursor ];    
   })
 
+  (discord.override {
+    withVencord = true;
+  })
+
   firefox
 
 ]
