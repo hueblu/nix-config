@@ -1,4 +1,4 @@
-{ nixvim, config, pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
   user = "henrym";
@@ -20,17 +20,6 @@ in
   };
 
   programs = {
-    rofi = {
-      enable = true;
-      modes = [
-        "drun"
-        "filebrowser"
-	"window"
-	"ssh"
-      ];
-      font = "FiraCode Nerd Font";
-    };
-
     nixvim = {
       enable = true;
       defaultEditor = true;
@@ -59,24 +48,6 @@ in
       };
     };
 
-    waybar = {
-      enable = true;
-      
-      settings = {
-        mainBar = {
-	  layer = "top";
-	  position = "top";
-	  height = 30;
-	  output = [
-	    "eDP-1"  
-	  ];
-
-	  modules-left = [ "hyprland/workspaces" "hyprland/submap" "wlr/taskbar" ];
-	  modules-center = [ "hyprland/window" ];
-	};
-      };
-    };
-
     kitty = {
       enable = true;
       themeFile = "Catppuccin-Macchiato";
@@ -94,25 +65,3 @@ in
       };
     };
   };
-
-  wayland.windowManager.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-
-    settings = {
-      "$mod" = "SUPER";
-
-      bind = [
-        "$mod, T, exec, kitty"
-	"$mod, Space, exec, rofi -show drun"
-	"$mod, Q, killactive"
-	"$mod, F, togglefloating"
-	"$mod_SHIFT, F, fullscreen" 
-      ];
-
-      exec-once = "waybar";
-    };
-  };
-
-  systemd.user.startServices = "sd-switch";
-}

@@ -19,18 +19,22 @@
 
   outputs = { nixvim, home-manager, self, nixpkgs, ... }@inputs:
   let
-    user = "henrym";
+    user = {
+      name = "Henry Moore";
+      userName = "henrym";
+      email = "henrydmoore23@gmail.com";
+    };
     machines = [
       { name = "thinkpad"; system = "x86_64-linux"; }
     ];
 
     linuxMachines = (builtins.filter (machine: (machine.system == "x86_64-linux") || (machine.system == "aarch64-linux")) machines);
-    darwinMachines = (builtins.filter (machine: (machine.system == "x86_64-darwin") || (machine.system == "aarch64-darwin")) machines);
+    # darwinMachines = (builtins.filter (machine: (machine.system == "x86_64-darwin") || (machine.system == "aarch64-darwin")) machines);
 
     devShell = machine: let pkgs = nixpkgs.legacyPackages.${machine.system}; in {
       default = with pkgs; mkShell {
-        nativeBuildInputs = with pkgs; [ bashInteractive git ];
-	shellHook = with pkgs; ''
+        nativeBuildInputs = [ bashInteractive git neovim ];
+	shellHook = ''
 	  export EDITOR=nvim
 	'';
       };
@@ -38,24 +42,22 @@
   in 
   {
     devShells = builtins.map devShell machines;
-    nixosConfigurations = builtins.listToAttrs (builtins.map (machine: with machine; rec {
+    nixosConfigurations = builtins.listToAttrs (builtins.map (machine: with machine; {
       inherit name;
       value = nixpkgs.lib.nixosSystem {
 	inherit system;
 	specialArgs = { inherit inputs user; };
 	modules = [
 	  ./hosts/${name}
-	  home-manager.nixosModules.home-manager
-	  {
+	  home-manager.nixosModules.home-manager 
+	  rec {
 	    home-manager.useGlobalPkgs = true;
 	    home-manager.useUserPackages = true;
-	    home-manager.users.${user} = { imports = [
-	      ./modules/${name}/home.nix
-	      nixvim.homeModules.nixvim
-	    ]; };
-	    home-manager.extraSpecialArgs = { inherit inputs user; };
+	    #TODO: get rid of nixvim import
+	    home-manager.users.${user.userName} = { imports = [ ./home/${name}.nix ]; };
+	    home-manager.extraSpecialArgs = { inherit inputs machine user; };
 	  }
-	];
+        ];
       }; 
       }
     ) linuxMachines);

@@ -51,6 +51,10 @@
     };
   };
 
+  environment.systemPackages = with pkgs; [
+    neovim
+  ];
+
   systemd.services.greetd.serviceConfig = {
     Type = "idle";
     StandardInput = "tty";
