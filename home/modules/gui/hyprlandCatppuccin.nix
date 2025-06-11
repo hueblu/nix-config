@@ -1,19 +1,26 @@
 { config, lib, pkgs, ... }: 
 let
   inherit (lib) mkIf mkOption types;
-  cfg = config.programs
+  cfg = config.local.hyprland;
+  defaultBool = mkOption { type = types.bool; default = true; };
+in
 {
   options = {
-    
+    local.hyprland = {
+      enable = defaultBool;
+      withRofi = defaultBool;
+      withWaybar = defaultBool;
+      withKitty = defaultBool;
+    };
   };
 
+  config = {
   home.packages = with pkgs; [
     hyprlock
-    kitty
   ];
   
   programs = {
-    rofi = mkIf config.withRofi {
+    rofi = mkIf cfg.withRofi {
       enable = true;
       modes = [
         "drun"
@@ -24,7 +31,7 @@ let
       font = "FiraCode Nerd Font";
     };
 
-    waybar = {
+    waybar = mkIf cfg.withWaybar {
       enable = true;
 
       settings = {
@@ -47,14 +54,14 @@ let
       };
     };
 
-    kitty = mkIf withKitty {
+    kitty = mkIf cfg.withKitty {
       enable = true;
       themeFile = "Catppuccin-Macchiato";
       shellIntegration.enableZshIntegration = true;
       enableGitIntegration = true;
       font = {
         name = "FiraCode Nerd Font";
-	size = 11;
+	size = 11.0;
       };
       settings = {
         background_opacity = 1.0;
@@ -83,9 +90,5 @@ let
       exec-once = "waybar";
     };
   };
+  };
 }
-
-
-
-
-

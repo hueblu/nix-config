@@ -17,7 +17,7 @@ let
 in
 {
   imports = [
-    ./modules/gui/hyprland.nix
+    ./modules/gui/hyprlandCatppuccin.nix
     ./modules/shell/zsh.nix
   ];
 
@@ -35,8 +35,13 @@ in
       userName = "${user.name}";
       userEmail = "${user.email}";
     };
-
     home-manager.enable = true;
+  };
+
+  services = {
+    dunst = {
+      enable = true;
+    };
   };
 
   systemd.user.startServices = "sd-switch";

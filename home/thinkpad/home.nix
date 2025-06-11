@@ -20,34 +20,6 @@ in
   };
 
   programs = {
-    nixvim = {
-      enable = true;
-      defaultEditor = true;
-      viAlias = true;
-      vimAlias = true;
-
-      colorschemes.catppuccin.enable = true;
-
-      plugins = {
-        lualine.enable = true;
-	lspconfig.enable = true;
-	cmp = {
-	  enable = true;
-	  autoEnableSources = true;
-	  settings.sources = [
-	    { name = "nvim_lsp"; }
-	    { name = "path"; }
-	    { name = "buffer"; }
-	  ];
-	};
-      };
-
-      lsp.servers = {
-	nil_ls.enable = true;
-        rust_analyzer.enable = true;
-      };
-    };
-
     kitty = {
       enable = true;
       themeFile = "Catppuccin-Macchiato";

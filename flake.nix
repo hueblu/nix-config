@@ -11,55 +11,67 @@
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
-
-    nixvim.url = "github:nix-community/nixvim";
-    nixvim.inputs.nixpkgs.follows = "nixpkgs";
-
   };
 
-  outputs = { nixvim, home-manager, self, nixpkgs, ... }@inputs:
+  outputs = { home-manager, self, nixpkgs, ... }@inputs:
   let
-    user = {
-      name = "Henry Moore";
-      userName = "henrym";
-      email = "henrydmoore23@gmail.com";
-    };
-    machines = [
-      { name = "thinkpad"; system = "x86_64-linux"; }
-    ];
+    inherit (nixpkgs) lib;
 
-    linuxMachines = (builtins.filter (machine: (machine.system == "x86_64-linux") || (machine.system == "aarch64-linux")) machines);
-    # darwinMachines = (builtins.filter (machine: (machine.system == "x86_64-darwin") || (machine.system == "aarch64-darwin")) machines);
+    machines =
+      lib.mapAttrs
+        (name: value: import ./machines/${name})
+        (lib.filterAttrs 
+          (file: type: (file != "shared") && (type == "directory")) 
+          (builtins.readDir ./machines)
+        );
 
-    devShell = machine: let pkgs = nixpkgs.legacyPackages.${machine.system}; in {
-      default = with pkgs; mkShell {
-        nativeBuildInputs = [ bashInteractive git neovim ];
-	shellHook = ''
-	  export EDITOR=nvim
-	'';
-      };
-    };
+    linuxMachines = 
+      builtins.filter 
+        (machine: 
+	  (machine.systemArch == "x86_64-linux") 
+	  || (machine.system == "aarch64-linux")
+	) 
+	machines;
+
+    darwinMachines = 
+      builtins.filter 
+        (machine: 
+	  (machine.system == "x86_64-darwin") 
+	  || (machine.system == "aarch64-darwin")
+	) 
+        machines;
   in 
   {
-    devShells = builtins.map devShell machines;
-    nixosConfigurations = builtins.listToAttrs (builtins.map (machine: with machine; {
-      inherit name;
-      value = nixpkgs.lib.nixosSystem {
-	inherit system;
-	specialArgs = { inherit inputs user; };
-	modules = [
-	  ./hosts/${name}
-	  home-manager.nixosModules.home-manager 
-	  rec {
-	    home-manager.useGlobalPkgs = true;
-	    home-manager.useUserPackages = true;
-	    #TODO: get rid of nixvim import
-	    home-manager.users.${user.userName} = { imports = [ ./home/${name}.nix ]; };
-	    home-manager.extraSpecialArgs = { inherit inputs machine user; };
-	  }
-        ];
-      }; 
-      }
-    ) linuxMachines);
+    nixosConfigurations = 
+      lib.mapAttrs
+	(n: machine:
+          nixpkgs.lib.nixosSystem rec {
+	    inherit (machine) system;
+	    specialArgs = { inherit inputs machine; };
+	      modules = machine.modules
+	        ++ [
+		  home-manager.nixosModules.home-manager 
+	          { home-manager = {
+		    useGlobalPkgs = true;
+	            useUserPackages = true;
+		    extraSpecialArgs = specialArgs;
+		  }; }
+		] 
+		++ builtins.map
+	          (user: {
+		    home-manager.users.${user.user} = {
+		      home = {
+		        enableNixpkgsReleaseCheck = false;
+			username = user.user;
+			homeDirectory = "/home/${user.user}";
+			stateVersion = "24.11";
+		      };
+		      imports = user.homeModules;
+		    };
+		  })
+		  machine.users;
+            } 
+          ) 
+          linuxMachines;
   };
 }
