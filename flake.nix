@@ -26,16 +26,16 @@
         );
 
     linuxMachines = 
-      builtins.filter 
-        (machine: 
-	  (machine.systemArch == "x86_64-linux") 
+      lib.filterAttrs
+        (_: machine: 
+	  (machine.system == "x86_64-linux") 
 	  || (machine.system == "aarch64-linux")
 	) 
 	machines;
 
     darwinMachines = 
-      builtins.filter 
-        (machine: 
+      lib.filterAttrs 
+        (_: machine: 
 	  (machine.system == "x86_64-darwin") 
 	  || (machine.system == "aarch64-darwin")
 	) 
@@ -43,7 +43,7 @@
   in 
   {
     nixosConfigurations = 
-      lib.mapAttrs
+      builtins.mapAttrs
 	(n: machine:
           nixpkgs.lib.nixosSystem rec {
 	    inherit (machine) system;
